@@ -44,6 +44,7 @@
 	"type": "module",
 	"dependencies": {
 		"change-case": "^5.4.4",
+		"dayjs": "^1.11.13",
 		"flowbite-svelte-blocks": "^1.1.3"
 	}
 }
