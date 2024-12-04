@@ -2,6 +2,7 @@
 	import './../app.css';
 	import { page } from '$app/stores';
 	import Header from './Header.svelte';
+	import { SvelteToast } from '@zerodevx/svelte-toast';
 	import Footer from './Footer.svelte';
 	$: activeUrl = $page.url.pathname;
 </script>
@@ -15,6 +16,7 @@
 
 	<Footer />
 </div>
+<SvelteToast />
 
 <style>
 	.app {

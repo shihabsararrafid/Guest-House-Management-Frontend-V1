@@ -1,9 +1,9 @@
 <script>
-	import { Button, Card, Datepicker, Input, Label, Select } from 'flowbite-svelte';
-	import { HeroBody, HeroHeader, News } from 'flowbite-svelte-blocks';
-	import { AddressBookSolid, ArrowRightOutline, VideoCameraSolid } from 'flowbite-svelte-icons';
-	import SearchRoom from './SearchRoom.svelte';
+	import { Button, Card } from 'flowbite-svelte';
+	import { HeroHeader, News } from 'flowbite-svelte-blocks';
+	import { AddressBookSolid, ArrowRightOutline } from 'flowbite-svelte-icons';
 	import DatePicker from '../DatePicker/DatePicker.svelte';
+	import SearchRoom from './SearchRoom.svelte';
 </script>
 
 <div

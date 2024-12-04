@@ -27,7 +27,7 @@
 			>
 		</NavBrand>
 		<div class="flex md:order-2">
-			<Button href="/login" size="sm">Get started</Button>
+			<Button href="/auth/login" size="sm">Get started</Button>
 			<NavHamburger />
 		</div>
 		<NavUl {activeUrl} {activeClass} {nonActiveClass}>
