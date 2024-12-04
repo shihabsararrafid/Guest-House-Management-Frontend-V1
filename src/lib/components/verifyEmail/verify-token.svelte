@@ -1,14 +1,24 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import { Section } from 'flowbite-svelte-blocks';
 	import { onMount } from 'svelte';
+	import { PUBLIC_API_URL } from '$env/static/public';
 
 	let isLoading = true;
-	let verificationStatus: 'success' | 'failed' | null = null;
+	let verificationStatus: 'success' | 'failed' | 'already-verified' | null = null;
+	let redirecting = false;
 
 	// Get query parameters
 	const token = $page.url.searchParams.get('token');
 	const email = $page.url.searchParams.get('email');
+
+	// Function to handle redirection
+	async function redirectToLogin() {
+		redirecting = true;
+		await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds before redirecting
+		goto('/auth/login'); // Replace with your login route
+	}
 
 	// Function to call the API
 	async function verifyEmail(token: string | null, email: string | null) {
@@ -19,14 +29,21 @@
 		}
 
 		try {
-			const response = await fetch('/api/verify-email', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ token, email })
-			});
+			const response = await fetch(
+				`${PUBLIC_API_URL}/api/v1/auth/verify-email?email=${email}&token=${token}`,
+				{
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({})
+				}
+			);
 
 			if (response.ok) {
 				verificationStatus = 'success';
+				redirectToLogin();
+			} else if (response.status === 409) {
+				verificationStatus = 'already-verified';
+				redirectToLogin();
 			} else {
 				verificationStatus = 'failed';
 			}
@@ -79,6 +96,29 @@
 				/>
 			</svg>
 			<p class="text-green-600 dark:text-green-400">Email verified successfully!</p>
+			{#if redirecting}
+				<p class="text-gray-500 dark:text-gray-400 mt-2">Redirecting to login...</p>
+			{/if}
+		</div>
+	{:else if verificationStatus === 'already-verified'}
+		<div class="text-center">
+			<svg
+				class="text-blue-500 dark:text-blue-400 w-11 h-11 mx-auto mb-4"
+				aria-hidden="true"
+				fill="currentColor"
+				viewBox="0 0 20 20"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<path
+					fill-rule="evenodd"
+					d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+					clip-rule="evenodd"
+				/>
+			</svg>
+			<p class="text-blue-600 dark:text-blue-400">Email is already verified!</p>
+			{#if redirecting}
+				<p class="text-gray-500 dark:text-gray-400 mt-2">Redirecting to login...</p>
+			{/if}
 		</div>
 	{:else}
 		<div class="text-center">
