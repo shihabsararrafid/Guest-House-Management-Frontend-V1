@@ -61,7 +61,7 @@
 		isExpanded: boolean;
 	}
 
-	const rooms = writable<Room[]>([
+	export let rooms = writable<Room[]>([
 		{ id: 1, adults: 1, children: 0, childAges: [], isExpanded: true }
 	]);
 
@@ -141,9 +141,10 @@
 	>
 		<p class="text-xs text-blue-400 font-semibold">ROOMS & GUESTS</p>
 		<p class="text-xs">
-			<span class="text-sm">1 </span> Room <span class="text-sm">1 </span> Guest
+			<span class="text-sm">{$rooms.length}</span> Room <span class="text-sm"> {totalGuests} </span>
+			Guest(s)
 		</p>
-		<p class="text-xs">1 Adult</p>
+		<p class="text-xs">{$rooms.reduce((s, room) => room.adults + s, 0)} Adult(s)</p>
 	</button>
 	{#if clickOutsideModal}
 		<div

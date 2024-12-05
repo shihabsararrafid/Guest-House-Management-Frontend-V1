@@ -17,11 +17,11 @@
 	import dayjs from 'dayjs';
 	import 'dayjs/locale/fr';
 	export let label = '';
+	export let inputTxt: string; // string, défault date = now
 
 	// data
 	const dispatch = createEventDispatcher();
 	let elModal: HTMLElement; // HTMLElement
-	let inputTxt: string; // string, défault date = now
 	let isOpenCalendar = false; // true: show calendar
 	const arrDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 	const currentDay = +dayjs().format('D'); // 1..31
@@ -34,6 +34,7 @@
 	// reactivity, on inputTxt changes
 	$: dispatch('datepicked', {
 		datepicked: inputTxt
+		// console.log(inputTxt)
 	});
 
 	// life cycle

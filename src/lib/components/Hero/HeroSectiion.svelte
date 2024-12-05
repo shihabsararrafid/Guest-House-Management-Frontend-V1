@@ -1,9 +1,48 @@
-<script>
+<script lang="ts">
 	import { Button, Card } from 'flowbite-svelte';
 	import { HeroHeader, News } from 'flowbite-svelte-blocks';
 	import { AddressBookSolid, ArrowRightOutline } from 'flowbite-svelte-icons';
 	import DatePicker from '../DatePicker/DatePicker.svelte';
 	import SearchRoom from './SearchRoom.svelte';
+	import { get, writable } from 'svelte/store';
+	import RoomSkeleton from '../Rooms/RoomSkeleton.svelte';
+	import AvailableRooms from '../Rooms/AvailableRooms.svelte';
+	import type { ResponseRoom } from '$lib/types/Rooms';
+	import { goto } from '$app/navigation';
+	let checkIn = '';
+	let checkOut = '';
+	let isLoading = false;
+	let availableRooms: ResponseRoom[] = [];
+	let error = '';
+
+	interface Room {
+		id: number;
+		adults: number;
+		children: number;
+		childAges: number[];
+		isExpanded: boolean;
+	}
+	let rooms = writable<Room[]>([
+		{ id: 1, adults: 1, children: 0, childAges: [], isExpanded: true }
+	]);
+	const searchAvailableRooms = async () => {
+		if (!checkIn || !checkOut) {
+			// You might want to show an error message here
+			return;
+		}
+
+		const roomsData = get(rooms);
+		const totalCapacity = roomsData.reduce((sum, room) => sum + room.adults + room.children, 0);
+
+		const params = new URLSearchParams({
+			checkIn,
+			checkOut,
+			capacity: JSON.stringify([1, totalCapacity])
+		});
+
+		// Redirect to the available rooms page with search parameters
+		await goto(`/available-rooms?${params.toString()}`);
+	};
 </script>
 
 <div
@@ -47,19 +86,37 @@
 			<Card class="lg:w-1/2 py-3 relative max-w-4xl mx-auto mb-8">
 				<form class="flex flex-col mb-10 md:flex-row gap-4">
 					<div class="grow">
-						<DatePicker label="Check In" />
+						<DatePicker bind:inputTxt={checkIn} label="Check In" />
 					</div>
 					<div class="grow">
-						<DatePicker label="Check Out" />
+						<DatePicker bind:inputTxt={checkOut} label="Check Out" />
 					</div>
 					<div class="grow">
-						<SearchRoom />
+						<SearchRoom bind:rooms />
 					</div>
 				</form>
-				<div class="flex items-end absolute -bottom-5 left-1/2">
-					<Button color="yellow" class="w-[120px]">Search</Button>
+				{#if error}
+					<p class="text-red-500 text-sm mt-2">{error}</p>
+				{/if}
+				<div class="flex items-end absolute -bottom-5 left-1/2 transform -translate-x-1/2">
+					<Button
+						on:click={searchAvailableRooms}
+						color="yellow"
+						class="w-[120px]"
+						disabled={isLoading}
+					>
+						{isLoading ? 'Searching...' : 'Search'}
+					</Button>
 				</div>
 			</Card>
 		</div>
+	</div>
+
+	<div class="mt-8 lg:w-1/2 mx-auto">
+		{#if isLoading}
+			<RoomSkeleton />
+		{:else if availableRooms.length > 0}
+			<AvailableRooms bind:rooms={availableRooms} />
+		{/if}
 	</div>
 </div>
