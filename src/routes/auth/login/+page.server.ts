@@ -18,6 +18,13 @@ export const actions = {
 
 			cookies.set('access_token', result.data.accessToken, { path: '/' });
 			cookies.set('refresh_token', result.data.refreshToken, { path: '/' });
+			cookies.set('user_info', JSON.stringify(result.data), {
+				path: '/',
+				maxAge: 3600,
+				secure: true,
+				sameSite: 'strict',
+				httpOnly: false
+			});
 		} catch (error) {
 			console.error(error);
 
