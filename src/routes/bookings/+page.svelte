@@ -136,6 +136,7 @@
 					<TableHeadCell>Check Out</TableHeadCell>
 					<TableHeadCell>Guests</TableHeadCell>
 					<TableHeadCell>Total Price</TableHeadCell>
+					<TableHeadCell>Paid Amount</TableHeadCell>
 					<TableHeadCell>Status</TableHeadCell>
 					<TableHeadCell>Payment</TableHeadCell>
 					<TableHeadCell>Actions</TableHeadCell>
@@ -157,9 +158,13 @@
 									{room.numberOfGuests}
 									{room.numberOfGuests > 1 ? 'guests' : 'guest'}
 								</TableBodyCell>
+
 								<TableBodyCell>
 									{booking.totalPrice} BDT
 									<!-- {formatPrice(booking.totalPrice)} -->
+								</TableBodyCell>
+								<TableBodyCell>
+									{booking.paidAmount} BDT
 								</TableBodyCell>
 								<TableBodyCell>
 									<!-- @ts-ignore -->

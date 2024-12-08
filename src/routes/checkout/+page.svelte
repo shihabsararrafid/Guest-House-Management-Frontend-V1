@@ -66,6 +66,8 @@
 			const searchParams = $page.url.searchParams;
 			// create payment intent server side
 			clientSecret = searchParams.get('client-secret');
+			console.log(clientSecret, 'dsds');
+
 			if (browser) {
 				const getCookie = (name: string): string | null => {
 					const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -161,7 +163,7 @@
 		{#if bookingData}
 			<div class="bg-slate-100 rounded-lg shadow-sm p-6 mb-6">
 				<h2 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
-				{#each bookingData.rooms as room}
+				{#each bookingData?.rooms as room}
 					<div class="flex justify-between items-center pb-4 border-b border-gray-200">
 						<div>
 							<p class="font-medium">{room.type} Room ({room.roomNumber})</p>
@@ -279,6 +281,7 @@
 			</div>
 		{:else}
 			<div class="flex justify-center items-center py-12">
+				<!-- <div>Loading</div> -->
 				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
 			</div>
 		{/if}
