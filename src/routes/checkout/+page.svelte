@@ -7,8 +7,10 @@
 		type StripeError,
 		type StripeElements
 	} from '@stripe/stripe-js';
-	import { PUBLIC_STRIPE_KEY } from '$env/static/public';
+	import { PUBLIC_API_URL, PUBLIC_STRIPE_KEY } from '$env/static/public';
 	import { Elements, LinkAuthenticationElement, PaymentElement, Address } from 'svelte-stripe';
+	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
 
 	interface PaymentIntentResponse {
 		clientSecret: string;
@@ -23,21 +25,59 @@
 	}
 
 	let stripe: Stripe | null = null;
-	let clientSecret: string | null = 'pi_3QSbVYDbQAAtiyHm22jq3wq3_secret_JjX1AfkmyDE8vHOF0evHWRMeL';
+	let clientSecret: string | null = null;
 	let error: StripeError | null = null;
 	let elements: StripeElements | undefined;
 	let processing = false;
+	interface BookingInfo {
+		bookingId: string;
+		totalAmount: number;
+		rooms: Array<{
+			roomNumber: string;
+			type: string;
+			numberOfGuests: number;
+			pricePerNight: number;
+		}>;
+		checkIn: string;
+		checkOut: string;
+	}
 
+	let bookingData: BookingInfo | null = null;
+	const formatDate = (dateString: string): string => {
+		const date = new Date(dateString);
+		return date.toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric'
+		});
+	};
+
+	const calculateNights = (checkIn: string, checkOut: string): number => {
+		const start = new Date(checkIn);
+		const end = new Date(checkOut);
+		const diffTime = Math.abs(end.getTime() - start.getTime());
+		return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+	};
 	onMount(async () => {
 		try {
 			stripe = await loadStripe(PUBLIC_STRIPE_KEY);
 			if (!stripe) {
 				throw new Error('Failed to load Stripe');
 			}
-
+			const searchParams = $page.url.searchParams;
 			// create payment intent server side
-			clientSecret = 'pi_3QSbVYDbQAAtiyHm22jq3wq3_secret_JjX1AfkmyDE8vHOF0evHWRMeL';
-			console.log(clientSecret);
+			clientSecret = searchParams.get('client-secret');
+			if (browser) {
+				const getCookie = (name: string): string | null => {
+					const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+					return match ? decodeURIComponent(match[2]) : null;
+				};
+
+				const bookingInfoStr = getCookie('bookingInfo');
+				if (bookingInfoStr) {
+					bookingData = JSON.parse(bookingInfoStr);
+				}
+			}
+			// console.log(clientSecret);
 			// await createPaymentIntent();
 		} catch (err) {
 			error = {
@@ -48,28 +88,8 @@
 		}
 	});
 
-	async function createPaymentIntent(): Promise<string> {
-		try {
-			const response = await fetch('/examples/payment-element/payment-intent', {
-				method: 'POST',
-				headers: {
-					'content-type': 'application/json'
-				},
-				body: JSON.stringify({})
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to create payment intent');
-			}
-
-			const { clientSecret }: PaymentIntentResponse = await response.json();
-			return clientSecret;
-		} catch (err) {
-			throw new Error(err instanceof Error ? err.message : 'Failed to create payment intent');
-		}
-	}
-
 	async function submit(): Promise<void> {
+		const searchParams = $page.url.searchParams;
 		// avoid processing duplicates
 		if (processing || !stripe || !elements) return;
 
@@ -89,8 +109,21 @@
 				error = result.error;
 				processing = false;
 			} else {
-				// payment succeeded, redirect to "thank you" page
-				await goto('/examples/payment-element/thanks');
+				const paymentId = searchParams.get('paymentId');
+				const response = await fetch(`${PUBLIC_API_URL}/payment/confirm-payment/${paymentId}`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						Accept: 'application/json',
+						'Access-Control-Allow-Credentials': 'true'
+					},
+					body: JSON.stringify({ status: 'COMPLETED' }),
+					credentials: 'include'
+				});
+				if (response.ok)
+					// payment succeeded, redirect to "thank you" page
+					await goto('/checkout/thank-you');
+				else await goto('/checkout/failed-transaction');
 			}
 		} catch (err) {
 			error = {
@@ -99,6 +132,7 @@
 				code: 'payment_failed'
 			};
 			processing = false;
+			await goto('/checkout/failed-transaction');
 		}
 	}
 </script>
@@ -115,7 +149,7 @@
 	<p class="error">{error.message} Please try again.</p>
 {/if}
 
-<div class="min-h-screen bg-gray-50 py-12">
+<div class="min-h-screen bg-gray-50 py-12 mt-[100px]">
 	<div class="container mx-auto px-4 max-w-3xl">
 		<!-- Header Section -->
 		<div class="mb-8 text-center">
@@ -124,20 +158,32 @@
 		</div>
 
 		<!-- Order Summary -->
-		<div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-			<h2 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
-			<div class="flex justify-between items-center pb-4 border-b border-gray-200">
-				<div>
-					<p class="font-medium">Room Booking</p>
-					<p class="text-sm text-gray-600">2 nights • Dec 15 - Dec 17</p>
+		{#if bookingData}
+			<div class="bg-slate-100 rounded-lg shadow-sm p-6 mb-6">
+				<h2 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
+				{#each bookingData.rooms as room}
+					<div class="flex justify-between items-center pb-4 border-b border-gray-200">
+						<div>
+							<p class="font-medium">{room.type} Room ({room.roomNumber})</p>
+							<p class="text-sm text-gray-600">
+								{calculateNights(bookingData.checkIn, bookingData.checkOut)} nights •
+								{formatDate(bookingData.checkIn)} - {formatDate(bookingData.checkOut)}
+							</p>
+							<p class="text-sm text-gray-600">{room.numberOfGuests} guests</p>
+						</div>
+						<p class="font-semibold">${room.pricePerNight.toFixed(2)}/night</p>
+					</div>
+				{/each}
+				<div class="flex justify-between items-center py-4">
+					<p class="font-medium">Total Amount</p>
+					<p class="text-xl font-bold text-blue-600">${bookingData.totalAmount.toFixed(2)}</p>
 				</div>
-				<p class="font-semibold">$299.00</p>
 			</div>
-			<div class="flex justify-between items-center py-4">
-				<p class="font-medium">Total Amount</p>
-				<p class="text-xl font-bold text-blue-600">$299.00</p>
+		{:else}
+			<div class="bg-slate-100 rounded-lg shadow-sm p-6 mb-6">
+				<p class="text-center text-gray-600">Loading booking information...</p>
 			</div>
-		</div>
+		{/if}
 
 		{#if error}
 			<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -146,7 +192,7 @@
 		{/if}
 
 		{#if clientSecret}
-			<div class="bg-white rounded-lg shadow-sm p-6">
+			<div class="bg-slate-100 rounded-lg shadow-sm p-6">
 				<Elements
 					{stripe}
 					{clientSecret}
@@ -154,7 +200,7 @@
 					labels="floating"
 					variables={{
 						colorPrimary: '#2563eb',
-						colorBackground: '#ffffdd',
+						colorBackground: '#ffffff',
 						colorText: '#1f2937',
 						colorDanger: '#dc2626',
 						spacingUnit: '4px',

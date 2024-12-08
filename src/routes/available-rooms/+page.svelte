@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { Button, Card, Badge } from 'flowbite-svelte';
-	import { XCircle } from 'lucide-svelte';
+	import { Button, Card, Badge, Toggle } from 'flowbite-svelte';
+	import { LucideLollipop, XCircle } from 'lucide-svelte';
+	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { PUBLIC_API_URL } from '$env/static/public';
+	import dayjs from 'dayjs';
 
 	interface Room {
 		id: string;
@@ -28,6 +32,49 @@
 		adults: number;
 		children: number;
 	}
+	interface BookingResponse {
+		message: string;
+		data: {
+			id: string;
+			guestId: string;
+			checkIn: string;
+			checkOut: string;
+			totalPrice: number;
+			totalPriceWithDiscount: number;
+			discount: number;
+			discountType: string;
+			status: string;
+			isPaid: boolean;
+			paymentDate: string | null;
+			paidAmount: number;
+			bookedMoney: number;
+			createdAt: string;
+			updatedAt: string;
+			rooms: BookingRoomResponse[];
+		};
+	}
+
+	interface BookingRoomResponse {
+		bookingId: string;
+		roomId: string;
+		pricePerNight: number;
+		numberOfGuests: number;
+		specialRequests: string | null;
+		createdAt: string;
+		room: Room;
+	}
+
+	interface BookingRequest {
+		checkIn: string;
+		checkOut: string;
+		rooms: {
+			id: string;
+			numberOfGuests: number;
+			pricePerNight: number;
+		}[];
+	}
+
+	let processing = false;
 
 	let isLoading = true;
 	let rooms: Room[] = [];
@@ -37,6 +84,7 @@
 	let requiredRooms = 1;
 	let checkIn = '';
 	let checkOut = '';
+	let payFull = true;
 
 	onMount(async () => {
 		try {
@@ -44,12 +92,12 @@
 			checkIn = searchParams.get('checkIn') || '';
 			checkOut = searchParams.get('checkOut') || '';
 			const capacityParam = searchParams.get('capacity') || '[]';
+			const totalRooms = searchParams.get('totalRooms');
 			const capacityArray = JSON.parse(capacityParam);
-			requiredRooms = capacityArray.length;
+			console.log(capacityArray, 'ad');
+			requiredRooms = parseInt(totalRooms ?? '1');
 
-			const response = await fetch(
-				`http://localhost:5000/api/v1/booking/get-available-rooms?${searchParams}`
-			);
+			const response = await fetch(`${PUBLIC_API_URL}/booking/get-available-rooms?${searchParams}`);
 			const data = await response.json();
 
 			if (!response.ok) {
@@ -93,6 +141,109 @@
 		);
 		return selectedRooms.reduce((total, booking) => total + booking.room.pricePerNight * nights, 0);
 	}
+	async function handleBookingConfirmation() {
+		try {
+			processing = true;
+
+			// Format dates to match API expectations (MM-DD-YYYY)
+			const formattedCheckIn = new Date(checkIn)
+				.toLocaleDateString('en-US', {
+					month: '2-digit',
+					day: '2-digit',
+					year: 'numeric'
+				})
+				.replace(/\//g, '-');
+
+			const formattedCheckOut = new Date(checkOut)
+				.toLocaleDateString('en-US', {
+					month: '2-digit',
+					day: '2-digit',
+					year: 'numeric'
+				})
+				.replace(/\//g, '-');
+
+			const bookingData: BookingRequest = {
+				checkIn: formattedCheckIn,
+				checkOut: formattedCheckOut,
+				rooms: selectedRooms.map((booking) => ({
+					id: booking.room.id,
+					numberOfGuests: booking.adults + booking.children,
+					pricePerNight: booking.room.pricePerNight
+				}))
+			};
+
+			const response = await fetch(`${PUBLIC_API_URL}/booking/book-rooms`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+					'Access-Control-Allow-Credentials': 'true'
+				},
+				body: JSON.stringify(bookingData),
+				credentials: 'include'
+			});
+
+			const result: BookingResponse = await response.json();
+
+			if (!response.ok) {
+				if (response.status === 401) {
+					// Redirect to login page with return URL
+					const currentPath = window.location.pathname + window.location.search;
+					await goto(`/auth/login?returnUrl=${encodeURIComponent(currentPath)}`);
+					return;
+				}
+
+				error = (result as any).error.message || `Failed to confirm booking`;
+				throw new Error((result as any).error.message || 'Failed to confirm booking');
+			}
+
+			// Store booking info in cookie
+			const d = {
+				amount: payFull ? result.data.totalPrice : result.data.totalPrice * 0.2,
+				currency: 'bdt'
+			};
+			if (browser) {
+				const bookingInfo = {
+					bookingId: result.data.id,
+					totalAmount: result.data.totalPrice,
+					rooms: result.data.rooms.map((room) => ({
+						roomNumber: room.room.roomNumber,
+						type: room.room.type,
+						numberOfGuests: room.numberOfGuests,
+						pricePerNight: room.pricePerNight
+					})),
+					checkIn: result.data.checkIn,
+					checkOut: result.data.checkOut,
+					payment: d
+				};
+
+				document.cookie = `bookingInfo=${JSON.stringify(bookingInfo)}; path=/; max-age=3600; Secure; SameSite=Strict`;
+			}
+
+			const response1 = await fetch(`${PUBLIC_API_URL}/payment/make-payment/${result.data.id}`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+					'Access-Control-Allow-Credentials': 'true'
+				},
+				body: JSON.stringify(d),
+				credentials: 'include'
+			});
+			const result1 = await response1.json();
+			if (response1.ok)
+				await goto(
+					`/checkout?booking=${result.data.id}&client-secret=${result1.data.client_secret}&paymentId=${result1.data.id}`
+				);
+			else throw new Error('Booking Successful  but payment unsuccessful . Contact with support');
+
+			// Redirect to checkout
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to process booking';
+		} finally {
+			processing = false;
+		}
+	}
 </script>
 
 <div class="container mx-auto px-4 py-8 mt-[100px] flex gap-6">
@@ -100,7 +251,7 @@
 		<h1 class="text-3xl font-bold mb-6">Available Rooms</h1>
 
 		{#if isLoading}
-			<div class="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
+			<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{#each Array(10) as _}
 					<Card class="animate-pulse">
 						<div class="h-32 bg-gray-200 rounded" />
@@ -143,7 +294,6 @@
 
 						<div class="mt-4">
 							<Button
-								color="yellow"
 								class="w-full"
 								on:click={() => selectRoom(room)}
 								disabled={selectedRooms.length >= requiredRooms ||
@@ -165,8 +315,16 @@
 			<Card>
 				<h2 class="text-xl font-bold mb-4">Your Booking Summary</h2>
 				<div class="mb-4">
-					<p class="text-sm text-gray-600">Check-in: {new Date(checkIn).toLocaleDateString()}</p>
-					<p class="text-sm text-gray-600">Check-out: {new Date(checkOut).toLocaleDateString()}</p>
+					<p class="text-sm text-gray-600">
+						Check-in: {dayjs(new Date(checkIn).toLocaleDateString())
+							.add(12, 'hour')
+							.format('DD MMM YYYY hh:mm a')}
+					</p>
+					<p class="text-sm text-gray-600">
+						Check-out: {dayjs(new Date(checkOut).toLocaleDateString())
+							.add(11, 'hour')
+							.format('DD MMM YYYY hh:mm a')}
+					</p>
 				</div>
 
 				<div class="space-y-4">
@@ -218,13 +376,41 @@
 				<div class="mt-4 border-t pt-4">
 					<div class="flex justify-between font-bold">
 						<span>Total Price:</span>
-						<span>${calculateTotalPrice()}</span>
+						<span>{calculateTotalPrice()} BDT</span>
 					</div>
+					<div class="flex justify-between font-bold">
+						<span>Booking Money:</span>
+						<span>{calculateTotalPrice() * 0.2} BDT</span>
+					</div>
+					<div class="flex justify-between font-bold">
+						<span>You will pay:</span>
+						<span>{payFull ? calculateTotalPrice() : calculateTotalPrice() * 0.2} BDT</span>
+					</div>
+					<Toggle bind:checked={payFull}>Pay Full</Toggle>
 				</div>
 
-				<Button class="w-full mt-4" disabled={selectedRooms.length < requiredRooms}>
-					Proceed to Booking
+				<Button
+					class="w-full mt-4"
+					disabled={selectedRooms.length < requiredRooms || processing}
+					on:click={handleBookingConfirmation}
+				>
+					{#if processing}
+						<div class="flex items-center justify-center">
+							<div
+								class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"
+							></div>
+							Processing...
+						</div>
+					{:else}
+						Proceed to Booking
+					{/if}
 				</Button>
+
+				{#if error}
+					<div class="mt-4 p-3 bg-red-50 rounded-lg">
+						<p class="text-sm text-red-600">{error}</p>
+					</div>
+				{/if}
 			</Card>
 		</div>
 	{/if}

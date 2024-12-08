@@ -37,7 +37,8 @@
 		const params = new URLSearchParams({
 			checkIn,
 			checkOut,
-			capacity: JSON.stringify([1, totalCapacity])
+			capacity: JSON.stringify([1, totalCapacity]),
+			totalRooms: roomsData.length.toString()
 		});
 
 		// Redirect to the available rooms page with search parameters

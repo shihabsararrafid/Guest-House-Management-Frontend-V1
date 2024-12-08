@@ -68,7 +68,7 @@
 			class="max-w-lg w-[400px] mx-auto px-8 py-8 bg-white rounded-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-700"
 		>
 			<h2 class="text-2xl font-semibold text-center text-gray-900 dark:text-white">Login</h2>
-			<form on:submit={handleSubmit} class="mt-6 space-y-4">
+			<form method="POST" action="/auth/login/" class="mt-6 space-y-4">
 				<div>
 					<Label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
 						>Email address</Label
@@ -77,6 +77,7 @@
 						bind:value={email}
 						type="email"
 						id="email"
+						name="email"
 						placeholder="name@example.com"
 						required
 					/>
@@ -89,6 +90,7 @@
 						bind:value={password}
 						type="password"
 						id="password"
+						name="password"
 						placeholder="••••••••"
 						required
 					/>
