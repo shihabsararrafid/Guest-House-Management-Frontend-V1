@@ -4,17 +4,20 @@
 	import Header from './Header.svelte';
 	import { SvelteToast } from '@zerodevx/svelte-toast';
 	import Footer from './Footer.svelte';
-	$: activeUrl = $page.url.pathname;
+	$: isAdminPage = $page.url.pathname.startsWith('/admin');
 </script>
 
 <div class="app">
-	<Header />
+	{#if !isAdminPage}
+		<Header />
+	{/if}
 
 	<main>
 		<slot />
 	</main>
-
-	<Footer />
+	{#if !isAdminPage}
+		<Footer />
+	{/if}
 </div>
 <SvelteToast />
 

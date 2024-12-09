@@ -14,7 +14,7 @@ export const actions = {
 			if (!response.ok) throw new Error('Login failed');
 
 			const result = await response.json();
-			console.log(result, 'token');
+			// console.log(result, 'token');
 
 			cookies.set('access_token', result.data.accessToken, { path: '/' });
 			cookies.set('refresh_token', result.data.refreshToken, { path: '/' });
@@ -25,6 +25,9 @@ export const actions = {
 				sameSite: 'strict',
 				httpOnly: false
 			});
+			if (result?.data?.role === 'ADMIN') {
+				throw redirect(303, '/admin');
+			}
 		} catch (error) {
 			console.error(error);
 

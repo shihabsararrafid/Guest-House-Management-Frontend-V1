@@ -1,26 +1,25 @@
 <!-- src/lib/components/BookingsTable.svelte -->
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import {
-		Table,
-		TableBody,
-		TableBodyCell,
-		TableBodyRow,
-		TableHead,
-		TableHeadCell,
-		Badge,
-		Spinner
-	} from 'flowbite-svelte';
-	import { format } from 'date-fns';
+	import { PUBLIC_API_URL } from '$env/static/public';
+	import BookingActionCell from '$lib/components/Booking/BookingActionCell.svelte';
 	import type {
 		Booking,
 		BookingsResponse,
 		BookingStatus,
 		TransactionStatus
 	} from '$lib/types/Booking';
-	import { PUBLIC_API_URL } from '$env/static/public';
-	import { Delete, Trash2 } from 'lucide-svelte';
-	import BookingActionCell from '$lib/components/Booking/BookingActionCell.svelte';
+	import { format } from 'date-fns';
+	import {
+		Badge,
+		Spinner,
+		Table,
+		TableBody,
+		TableBodyCell,
+		TableBodyRow,
+		TableHead,
+		TableHeadCell
+	} from 'flowbite-svelte';
+	import { onMount } from 'svelte';
 	let bookings: Booking[] = [];
 	let loading = true;
 	let error: string | null = null;

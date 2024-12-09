@@ -78,7 +78,7 @@
 						<DropdownDivider />
 						<DropdownItem href="/profile">Profile</DropdownItem>
 						<DropdownItem href="/bookings">My Bookings</DropdownItem>
-						<DropdownItem href="/settings">Settings</DropdownItem>
+						<!-- <DropdownItem href="/settings">Settings</DropdownItem> -->
 						<DropdownDivider />
 						<DropdownItem on:click={handleLogout}>Sign out</DropdownItem>
 					</Dropdown>

@@ -92,13 +92,13 @@
 		{/if}
 	</div>
 
-	<!-- Delete Button -->
+	<!-- Delete Button
 	<button
 		on:click={() => (showDialog = true)}
 		class="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full flex items-center justify-center"
 	>
 		<Trash2 class="h-4 w-4" />
-	</button>
+	</button> -->
 </div>
 
 <!-- Delete Confirmation Dialog -->

@@ -247,71 +247,73 @@
 </script>
 
 <div class="container mx-auto px-4 py-8 mt-[100px] flex gap-6">
-	<div class="flex-1">
-		<h1 class="text-3xl font-bold mb-6">Available Rooms</h1>
+	<div class="block md:flex md:gap-6">
+		<div class="flex-1 mb-6 md:mb-0">
+			<h1 class="text-3xl font-bold mb-6">Available Rooms</h1>
 
-		{#if isLoading}
-			<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-				{#each Array(10) as _}
-					<Card class="animate-pulse">
-						<div class="h-32 bg-gray-200 rounded" />
-					</Card>
-				{/each}
-			</div>
-		{:else if error}
-			<Card class="bg-red-50">
-				<p class="text-red-500">{error}</p>
-			</Card>
-		{:else if rooms.length === 0}
-			<Card>
-				<p class="text-center text-gray-600">No rooms available for the selected dates</p>
-			</Card>
-		{:else}
-			<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-				{#each rooms as room (room.id)}
-					<Card>
-						<div class="flex justify-between">
-							<h3 class="text-xl font-semibold">Room {room.roomNumber}</h3>
-							<p class="text-lg font-bold">${room.pricePerNight}/night</p>
-						</div>
-						<p class="text-gray-600 mt-2">{room.type} - {room.viewType} View</p>
-						<p class="mt-2">{room.description}</p>
+			{#if isLoading}
+				<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+					{#each Array(10) as _}
+						<Card class="animate-pulse">
+							<div class="h-32 bg-gray-200 rounded" />
+						</Card>
+					{/each}
+				</div>
+			{:else if error}
+				<Card class="bg-red-50">
+					<p class="text-red-500">{error}</p>
+				</Card>
+			{:else if rooms.length === 0}
+				<Card>
+					<p class="text-center text-gray-600">No rooms available for the selected dates</p>
+				</Card>
+			{:else}
+				<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+					{#each rooms as room (room.id)}
+						<Card>
+							<div class="flex justify-between">
+								<h3 class="text-xl font-semibold">Room {room.roomNumber}</h3>
+								<p class="text-lg font-bold">${room.pricePerNight}/night</p>
+							</div>
+							<p class="text-gray-600 mt-2">{room.type} - {room.viewType} View</p>
+							<p class="mt-2">{room.description}</p>
 
-						<div class="mt-4 flex gap-2 text-sm">
-							{#if room.hasWifi}
-								<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">WiFi</span>
-							{/if}
-							{#if room.hasAC}
-								<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">AC</span>
-							{/if}
-							{#if room.hasTv}
-								<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">TV</span>
-							{/if}
-							{#if room.hasRefrigerator}
-								<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">Fridge</span>
-							{/if}
-						</div>
+							<div class="mt-4 flex gap-2 text-sm">
+								{#if room.hasWifi}
+									<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">WiFi</span>
+								{/if}
+								{#if room.hasAC}
+									<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">AC</span>
+								{/if}
+								{#if room.hasTv}
+									<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">TV</span>
+								{/if}
+								{#if room.hasRefrigerator}
+									<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">Fridge</span>
+								{/if}
+							</div>
 
-						<div class="mt-4">
-							<Button
-								class="w-full"
-								on:click={() => selectRoom(room)}
-								disabled={selectedRooms.length >= requiredRooms ||
-									selectedRooms.some((booking) => booking.room.id === room.id)}
-							>
-								{selectedRooms.some((booking) => booking.room.id === room.id)
-									? 'Selected'
-									: 'Select Room'}
-							</Button>
-						</div>
-					</Card>
-				{/each}
-			</div>
-		{/if}
+							<div class="mt-4">
+								<Button
+									class="w-full"
+									on:click={() => selectRoom(room)}
+									disabled={selectedRooms.length >= requiredRooms ||
+										selectedRooms.some((booking) => booking.room.id === room.id)}
+								>
+									{selectedRooms.some((booking) => booking.room.id === room.id)
+										? 'Selected'
+										: 'Select Room'}
+								</Button>
+							</div>
+						</Card>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
 
 	{#if showBookingPanel}
-		<div class="w-[400px] sticky top-[100px] h-fit">
+		<div class="w-full md:w-[400px] md:sticky md:top-[100px] md:h-fit">
 			<Card>
 				<h2 class="text-xl font-bold mb-4">Your Booking Summary</h2>
 				<div class="mb-4">
