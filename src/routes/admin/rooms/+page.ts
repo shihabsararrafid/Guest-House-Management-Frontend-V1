@@ -10,7 +10,16 @@ export interface RoomResponse {
 
 export const load: PageLoad = async ({ fetch }) => {
 	try {
-		const response = await fetch(`${PUBLIC_API_URL}/room/get-all-rooms`);
+		const response = await fetch(`${PUBLIC_API_URL}/room/get-all-rooms`, {
+			headers: {
+				'Content-Type': 'application/json',
+				Accept: 'application/json',
+				'Access-Control-Allow-Credentials': 'true'
+			},
+			// body: JSON.stringify(newRoom),
+			credentials: 'include',
+			method: 'GET'
+		});
 		// console.log(await response.json());
 		if (response.ok) {
 			const { data } = (await response.json()) as RoomResponse;

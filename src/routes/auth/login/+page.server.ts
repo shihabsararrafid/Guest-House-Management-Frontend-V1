@@ -10,7 +10,7 @@ export const actions = {
 				body: JSON.stringify(Object.fromEntries(data.entries())),
 				headers: { 'Content-Type': 'application/json' }
 			});
-			console.log(response);
+			// console.log(response);
 			if (!response.ok) throw new Error('Login failed');
 
 			const result = await response.json();
@@ -25,11 +25,18 @@ export const actions = {
 				sameSite: 'strict',
 				httpOnly: false
 			});
-			if (result?.data?.role === 'ADMIN') {
-				throw redirect(303, '/admin');
-			}
+
+			const isAdmin = result?.data?.role === 'ADMIN';
+
+			// return redirect(303, '/admin');
+			return { success: true, isAdmin };
+			// if (result?.data?.role === 'ADMIN') {
+			// 	console.log('here');
+			// 	throw redirect(303, '/admin/');
+			// 	// console.log()
+			// }
 		} catch (error) {
-			console.error(error);
+			console.error(error, 'hrere');
 
 			return fail(400, { success: false });
 		}

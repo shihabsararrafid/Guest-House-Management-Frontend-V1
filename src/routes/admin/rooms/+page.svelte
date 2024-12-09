@@ -1,20 +1,16 @@
 <!-- routes/admin/rooms/+page.svelte -->
 <script lang="ts">
-	import { Plus, Search, Edit2, Trash2, Wifi, Tv, Wind, BedDouble } from 'lucide-svelte';
-	import type { Room, NewRoom, Bed } from '$lib/types/Rooms';
-	import { Input, Label } from 'flowbite-svelte';
-	import { onMount } from 'svelte';
+	import { invalidate, invalidateAll } from '$app/navigation';
 	import { PUBLIC_API_URL } from '$env/static/public';
-	import type { RoomResponse } from './proxy+page.js';
-	import { goto } from '$app/navigation';
-	// import { RoomType, RoomStatus, BedType } from '$lib/types/Rooms';
+	import type { NewRoom, Room } from '$lib/types/Rooms';
+	import { toast } from '@zerodevx/svelte-toast';
+	import { Input, Label } from 'flowbite-svelte';
+	import { Edit, Edit2, Plus, Search, Trash2, Tv, Wifi, Wind } from 'lucide-svelte';
 	export let data;
-	console.log(data);
 	let searchQuery = '';
 	let showAddModal = false;
 	let loading = false;
 	let editingRoom: Room | null = null;
-
 	// Enums from schema
 	// Define the enums directly in the component if you haven't set up the types file
 	enum RoomType {
@@ -69,7 +65,7 @@
 		status: RoomStatus.AVAILABLE,
 		floor: 1,
 		capacity: 2,
-		pricePerNight: 0,
+		pricePerNight: 100,
 		hasWifi: true,
 		hasAC: true,
 		hasTv: true,
@@ -77,7 +73,7 @@
 		description: '',
 		beds: [{ bedType: BedType.SINGLE, quantity: 1, capacity: 1 }],
 		viewType: '',
-		squareFootage: 0
+		squareFootage: 1
 	};
 
 	let rooms: Room[] = [
@@ -138,19 +134,41 @@
 		try {
 			loading = true;
 			// Add API call here
-			// const response = await fetch('/api/rooms', {
-			//   method: 'POST',
-			//   headers: { 'Content-Type': 'application/json' },
-			//   body: JSON.stringify(newRoom)
-			// });
-			// const data = await response.json();
+			const response = await fetch(`${PUBLIC_API_URL}/room/create-room`, {
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+					'Access-Control-Allow-Credentials': 'true'
+				},
+				body: JSON.stringify(newRoom),
+				credentials: 'include',
+				method: 'POST'
+			});
+			if (response.ok) {
+				invalidate(`${PUBLIC_API_URL}/room/get-all-rooms`);
+			}
+			const data = await response.json();
 
 			// Temporary: just add to local array
 			const roomToAdd: Room = { ...newRoom, id: String(rooms.length + 1) };
+			console.log(roomToAdd, 'new room');
 			rooms = [...rooms, roomToAdd];
 			showAddModal = false;
+			toast.push('Room addition Successful!', {
+				theme: {
+					'--toastBackground': '#48BB78',
+					'--toastColor': 'white'
+				}
+			});
 			resetForm();
 		} catch (error) {
+			// Show success message
+			toast.push('Failed to Add Room!', {
+				theme: {
+					'--toastBackground': 'red',
+					'--toastColor': 'white'
+				}
+			});
 			console.error('Error adding room:', error);
 		} finally {
 			loading = false;
@@ -161,16 +179,38 @@
 		editingRoom = room;
 		newRoom = { ...room };
 		showAddModal = true;
+		console.log('here');
 	}
 
 	async function handleDeleteRoom(id: string): Promise<void> {
 		if (confirm('Are you sure you want to delete this room?')) {
 			try {
-				// Add API call here
-				// await fetch(`/api/rooms/${id}`, { method: 'DELETE' });
-
-				rooms = rooms.filter((room) => room.id !== id);
+				const response = await fetch(`${PUBLIC_API_URL}/room/${id}`, {
+					headers: {
+						'Content-Type': 'application/json',
+						Accept: 'application/json',
+						'Access-Control-Allow-Credentials': 'true'
+					},
+					// body: JSON.stringify(newRoom),
+					credentials: 'include',
+					method: 'DELETE'
+				});
+				if (response.ok) {
+					toast.push('Room Deleted !', {
+						theme: {
+							'--toastBackground': '#48BB78',
+							'--toastColor': 'white'
+						}
+					});
+					invalidate(`${PUBLIC_API_URL}/room/get-all-rooms`);
+				}
 			} catch (error) {
+				toast.push('Failed to Delete Room!', {
+					theme: {
+						'--toastBackground': 'red',
+						'--toastColor': 'white'
+					}
+				});
 				console.error('Error deleting room:', error);
 			}
 		}
@@ -293,7 +333,7 @@
 						<td class="px-6 py-4">
 							<div class="flex gap-2">
 								<button class="text-blue-600 hover:text-blue-800" on:click={() => handleEdit(room)}>
-									<Edit2 class="w-5 h-5" />
+									<Edit class="w-5 h-5" />
 								</button>
 								<button
 									class="text-red-600 hover:text-red-800"
@@ -383,7 +423,7 @@
 						<input
 							type="number"
 							bind:value={newRoom.squareFootage}
-							min="0"
+							min="1"
 							class="w-full px-3 py-2 border rounded-lg"
 						/>
 					</div>

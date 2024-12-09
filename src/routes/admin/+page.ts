@@ -6,7 +6,16 @@ import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ fetch }) => {
 	try {
-		const response = await fetch(`${PUBLIC_API_URL}/dashboard/admin`);
+		const response = await fetch(`${PUBLIC_API_URL}/dashboard/admin`, {
+			headers: {
+				'Content-Type': 'application/json',
+				Accept: 'application/json',
+				'Access-Control-Allow-Credentials': 'true'
+			},
+			// body: JSON.stringify(newRoom),
+			credentials: 'include',
+			method: 'GET'
+		});
 		if (response.ok) {
 			const { stats, recentBookings } = (await response.json()).data as DashboardResponse;
 
