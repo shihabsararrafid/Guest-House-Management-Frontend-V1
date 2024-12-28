@@ -227,7 +227,7 @@
 
 <div>
 	<!-- Header -->
-	<div class="flex justify-between items-center mb-6">
+	<div class="flex flex-wrap justify-between items-center mb-6">
 		<h1 class="text-2xl font-bold text-gray-800">Room Management</h1>
 		<button
 			on:click={() => {
@@ -243,7 +243,7 @@
 
 	<!-- Search and Filters -->
 	<div class="bg-white p-4 rounded-lg shadow mb-6">
-		<div class="flex gap-4">
+		<div class="flex flex-wrap gap-4">
 			<div class="relative flex-1">
 				<Search class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
 				<input
@@ -269,84 +269,97 @@
 	</div>
 
 	<!-- Room Table -->
-	<div class="bg-white rounded-lg shadow overflow-hidden">
-		<table class="w-full">
-			<thead class="bg-gray-50">
-				<tr>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-						>Room</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-						>Type</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-						>Floor</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-						>Status</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-						>Amenities</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-						>Price</th
-					>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-						>Actions</th
-					>
-				</tr>
-			</thead>
-			<tbody class="divide-y divide-gray-200">
-				{#each filteredRooms as room}
+	<div class="w-full overflow-x-auto">
+		<div class="p-6 bg-white rounded-lg shadow min-w-[800px]">
+			<!-- <div class="bg-white rounded-lg shadow overflow-hidden"> -->
+			<table class="w-full">
+				<thead class="bg-gray-50">
 					<tr>
-						<td class="px-6 py-4">
-							<div>
-								<div class="font-medium">{room.roomNumber}</div>
-								<div class="text-sm text-gray-500">{room.roomName ?? ''}</div>
-							</div>
-						</td>
-						<td class="px-6 py-4">{room.type}</td>
-						<td class="px-6 py-4">{room.floor}</td>
-						<td class="px-6 py-4">
-							<span
-								class="px-2 py-1 text-sm rounded-full
-                  {room.status === 'AVAILABLE'
-									? 'bg-green-100 text-green-800'
-									: room.status === 'OCCUPIED'
-										? 'bg-red-100 text-red-800'
-										: room.status === 'MAINTENANCE'
-											? 'bg-yellow-100 text-yellow-800'
-											: 'bg-gray-100 text-gray-800'}"
-							>
-								{room.status}
-							</span>
-						</td>
-						<td class="px-6 py-4">
-							<div class="flex gap-2">
-								{#if room.hasWifi}<Wifi class="w-4 h-4 text-blue-500" />{/if}
-								{#if room.hasAC}<Wind class="w-4 h-4 text-blue-500" />{/if}
-								{#if room.hasTv}<Tv class="w-4 h-4 text-blue-500" />{/if}
-								{#if room.hasRefrigerator}<div class="text-blue-500 text-sm">🧊</div>{/if}
-							</div>
-						</td>
-						<td class="px-6 py-4"> BDT {room.pricePerNight}</td>
-						<td class="px-6 py-4">
-							<div class="flex gap-2">
-								<button class="text-blue-600 hover:text-blue-800" on:click={() => handleEdit(room)}>
-									<Edit class="w-5 h-5" />
-								</button>
-								<button
-									class="text-red-600 hover:text-red-800"
-									on:click={() => handleDeleteRoom(room.id)}
-								>
-									<Trash2 class="w-5 h-5" />
-								</button>
-							</div>
-						</td>
+						<th
+							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+							>Room</th
+						>
+						<th
+							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+							>Type</th
+						>
+						<th
+							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+							>Floor</th
+						>
+						<th
+							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+							>Status</th
+						>
+						<th
+							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+							>Amenities</th
+						>
+						<th
+							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+							>Price</th
+						>
+						<th
+							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+							>Actions</th
+						>
 					</tr>
-				{/each}
-			</tbody>
-		</table>
+				</thead>
+				<tbody class="divide-y divide-gray-200">
+					{#each filteredRooms as room}
+						<tr>
+							<td class="px-6 py-4">
+								<div>
+									<div class="font-medium">{room.roomNumber}</div>
+									<div class="text-sm text-gray-500">{room.roomName ?? ''}</div>
+								</div>
+							</td>
+							<td class="px-6 py-4">{room.type}</td>
+							<td class="px-6 py-4">{room.floor}</td>
+							<td class="px-6 py-4">
+								<span
+									class="px-2 py-1 text-sm rounded-full
+                  {room.status === 'AVAILABLE'
+										? 'bg-green-100 text-green-800'
+										: room.status === 'OCCUPIED'
+											? 'bg-red-100 text-red-800'
+											: room.status === 'MAINTENANCE'
+												? 'bg-yellow-100 text-yellow-800'
+												: 'bg-gray-100 text-gray-800'}"
+								>
+									{room.status}
+								</span>
+							</td>
+							<td class="px-6 py-4">
+								<div class="flex gap-2">
+									{#if room.hasWifi}<Wifi class="w-4 h-4 text-blue-500" />{/if}
+									{#if room.hasAC}<Wind class="w-4 h-4 text-blue-500" />{/if}
+									{#if room.hasTv}<Tv class="w-4 h-4 text-blue-500" />{/if}
+									{#if room.hasRefrigerator}<div class="text-blue-500 text-sm">🧊</div>{/if}
+								</div>
+							</td>
+							<td class="px-6 py-4"> BDT {room.pricePerNight}</td>
+							<td class="px-6 py-4">
+								<div class="flex gap-2">
+									<button
+										class="text-blue-600 hover:text-blue-800"
+										on:click={() => handleEdit(room)}
+									>
+										<Edit class="w-5 h-5" />
+									</button>
+									<button
+										class="text-red-600 hover:text-red-800"
+										on:click={() => handleDeleteRoom(room.id)}
+									>
+										<Trash2 class="w-5 h-5" />
+									</button>
+								</div>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
 	</div>
 
 	<!-- Add/Edit Room Modal -->
