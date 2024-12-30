@@ -28,7 +28,7 @@
 					>Ideal for short stays and individual travelers.</svelte:fragment
 				>
 				<svelte:fragment slot="price">
-					<span class="mr-2 text-5xl font-extrabold">$79</span>
+					<span class="mr-2 text-3xl font-extrabold">7900 bdt</span>
 					<span class="text-gray-500 dark:text-gray-400">/night</span>
 				</svelte:fragment>
 			</PricingBodyHead>
@@ -62,7 +62,7 @@
 					>Perfect for extended stays or those seeking extra comfort.</svelte:fragment
 				>
 				<svelte:fragment slot="price">
-					<span class="mr-2 text-5xl font-extrabold">$119</span>
+					<span class="mr-2 text-3xl font-extrabold">1190 bdt</span>
 					<span class="text-gray-500 dark:text-gray-400">/night</span>
 				</svelte:fragment>
 			</PricingBodyHead>
@@ -96,7 +96,7 @@
 					>Ideal for families or those requiring more space.</svelte:fragment
 				>
 				<svelte:fragment slot="price">
-					<span class="mr-2 text-5xl font-extrabold">$159</span>
+					<span class="mr-2 text-3xl font-extrabold">15900 bdt</span>
 					<span class="text-gray-500 dark:text-gray-400">/night</span>
 				</svelte:fragment>
 			</PricingBodyHead>

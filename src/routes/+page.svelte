@@ -11,5 +11,5 @@
 	<FeatureItem />
 	<Rooms />
 	<FaqIItem />
-	<Cta />
+	<!-- <Cta /> -->
 </div>

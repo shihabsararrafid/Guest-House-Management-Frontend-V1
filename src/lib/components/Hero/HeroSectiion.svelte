@@ -72,12 +72,12 @@
 			<div
 				class="flex flex-col items-center mb-8 lg:mb-16 space-y-4 sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4"
 			>
-				<a href="/">
+				<a href="/pricing">
 					<Button size="lg" color="red">
 						See Pricing <ArrowRightOutline size="lg" class="ml-2 -mr-1" />
 					</Button>
 				</a>
-				<a href="/">
+				<a href="/contact">
 					<Button size="lg" color="light">
 						<AddressBookSolid size="lg" class="mr-2 -ml-1" />
 						Contact Us

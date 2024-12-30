@@ -28,12 +28,6 @@
 			<h2 class="mb-6 text-sm font-semibold text-white uppercase dark:text-white">Resources</h2>
 			<FooterLinkGroup>
 				<FooterLink liClass="mb-4 text-white" href="https://ruet.ac.bd/">RUET</FooterLink>
-				<FooterLink liClass="mb-4 text-white" href="https://tailwindcss.com/"
-					>Tailwind CSS</FooterLink
-				>
-				<FooterLink liClass="mb-4 text-white" href="https://flowbite-svelte.com/"
-					>Flowbite-Svelte</FooterLink
-				>
 			</FooterLinkGroup>
 		</div>
 		<div>
