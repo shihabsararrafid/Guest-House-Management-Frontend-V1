@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { PUBLIC_API_URL } from '$env/static/public';
+	import { downloadHTMLReceipt } from '$lib/functions/downloadReceipt';
 	import { Button, Input, Label } from 'flowbite-svelte';
 	import { Trash2 } from 'lucide-svelte';
 
@@ -76,7 +77,7 @@
 
 <div class="flex gap-2">
 	<div>
-		{#if booking.transaction && booking.transaction[0]?.stripeReceiptUrl}
+		{#if booking.transaction && booking.transaction[0]}
 			<a
 				href={booking.transaction[0].stripeReceiptUrl}
 				target="_blank"
@@ -90,6 +91,7 @@
 		{#if !booking.isPaid}
 			<Button on:click={() => (showPaymentDialog = true)}>Pay Now</Button>
 		{/if}
+		<Button on:click={() => downloadHTMLReceipt(booking)}>Download Receipt</Button>
 	</div>
 
 	<!-- Delete Button

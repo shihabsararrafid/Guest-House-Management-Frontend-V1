@@ -10,7 +10,7 @@
 	import { Button } from 'flowbite-svelte';
 </script>
 
-<Section name="pricing">
+<Section id="pricing" name="pricing">
 	<PricingHead>
 		<svelte:fragment slot="h2">Comfortable Accommodations for Every Need</svelte:fragment>
 		<svelte:fragment slot="paragraph"

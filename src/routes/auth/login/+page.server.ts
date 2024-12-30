@@ -4,6 +4,11 @@ export const actions = {
 	default: async ({ cookies, request }) => {
 		try {
 			const data = await request.formData();
+			const refererUrl = request.headers.get('referer');
+
+			const parsedUrl = new URL(refererUrl ?? '');
+			const returnUrl = parsedUrl.searchParams.get('returnUrl');
+			// console.log(parsedUrl.searchParams.get('returnUrl'));
 
 			const response = await fetch(`${PUBLIC_API_URL}/auth/login`, {
 				method: 'POST',
@@ -29,7 +34,7 @@ export const actions = {
 			const isAdmin = result?.data?.role === 'ADMIN';
 
 			// return redirect(303, '/admin');
-			return { success: true, isAdmin };
+			return { success: true, isAdmin, returnUrl };
 			// if (result?.data?.role === 'ADMIN') {
 			// 	console.log('here');
 			// 	throw redirect(303, '/admin/');

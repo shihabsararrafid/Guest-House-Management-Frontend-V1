@@ -173,12 +173,12 @@
 							</p>
 							<p class="text-sm text-gray-600">{room.numberOfGuests} guests</p>
 						</div>
-						<p class="font-semibold">${room.pricePerNight.toFixed(2)}/night</p>
+						<p class="font-semibold">BDT {room.pricePerNight.toFixed(2)}/night</p>
 					</div>
 				{/each}
 				<div class="flex justify-between items-center py-4">
 					<p class="font-medium">Total Amount</p>
-					<p class="text-xl font-bold text-blue-600">${bookingData.totalAmount.toFixed(2)}</p>
+					<p class="text-xl font-bold text-blue-600">BDT {bookingData.totalAmount.toFixed(2)}</p>
 				</div>
 			</div>
 		{:else}
@@ -259,7 +259,7 @@
 									Processing...
 								</span>
 							{:else}
-								Pay $299.00
+								Pay Now
 							{/if}
 						</button>
 

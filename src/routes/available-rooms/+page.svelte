@@ -93,8 +93,11 @@
 			checkOut = searchParams.get('checkOut') || '';
 			const capacityParam = searchParams.get('capacity') || '[]';
 			const totalRooms = searchParams.get('totalRooms');
+			const roomsFromUrl = searchParams.get('selectedRooms');
 			const capacityArray = JSON.parse(capacityParam);
-			console.log(capacityArray, 'ad');
+			selectedRooms = roomsFromUrl ? (JSON.parse(roomsFromUrl) as BookingRoom[]) : [];
+			if (selectedRooms.length > 0) showBookingPanel = true;
+			console.log(selectedRooms, 'ad');
 			requiredRooms = parseInt(totalRooms ?? '1');
 
 			const response = await fetch(`${PUBLIC_API_URL}/booking/get-available-rooms?${searchParams}`);
@@ -111,10 +114,28 @@
 			isLoading = false;
 		}
 	});
+	function updateSearchParams(newSelectedRooms: BookingRoom[]) {
+		const searchParams = new URLSearchParams(window.location.search);
+		const selectedRoomIds = newSelectedRooms.map((booking) => booking);
+		if (selectedRoomIds.length !== 0) {
+			searchParams.set('selectedRooms', JSON.stringify(selectedRoomIds));
+		} else searchParams.delete('selectedRooms');
+
+		// Keep existing params
+		const currentParams = $page.url.searchParams;
+		['checkIn', 'checkOut', 'capacity', 'totalRooms'].forEach((param) => {
+			const value = currentParams.get(param);
+			if (value) searchParams.set(param, value);
+		});
+
+		// Update URL without page reload
+		const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
+		goto(newUrl, { replaceState: true });
+	}
 
 	function selectRoom(room: Room) {
 		if (selectedRooms.length < requiredRooms) {
-			selectedRooms = [
+			const newSelectedRooms = [
 				...selectedRooms,
 				{
 					room,
@@ -122,12 +143,30 @@
 					children: 0
 				}
 			];
+			selectedRooms = newSelectedRooms;
+			// Update URL with selected room IDs
+			updateSearchParams(newSelectedRooms);
+			showBookingPanel = true;
 		}
-		showBookingPanel = true;
+	}
+	function updatedSelectedRooms(updatedRoom: BookingRoom) {
+		const roomIndex = selectedRooms.findIndex((r) => r.room.id === updatedRoom.room.id);
+
+		if (roomIndex !== -1) {
+			// Update existing room
+			selectedRooms = selectedRooms.map((room, index) =>
+				index === roomIndex ? updatedRoom : room
+			);
+		} else {
+			// Add new room
+			selectedRooms = [...selectedRooms, updatedRoom];
+		}
+		updateSearchParams(selectedRooms);
 	}
 
 	function removeRoom(index: number) {
 		selectedRooms = selectedRooms.filter((_, i) => i !== index);
+		updateSearchParams(selectedRooms);
 		if (selectedRooms.length === 0) {
 			showBookingPanel = false;
 		}
@@ -209,7 +248,10 @@
 					rooms: result.data.rooms.map((room) => ({
 						roomNumber: room.room.roomNumber,
 						type: room.room.type,
-						numberOfGuests: room.numberOfGuests,
+						numberOfGuests:
+							typeof room.numberOfGuests === 'string'
+								? parseInt(room.numberOfGuests)
+								: room.numberOfGuests,
 						pricePerNight: room.pricePerNight
 					})),
 					checkIn: result.data.checkIn,
@@ -252,7 +294,7 @@
 			<h1 class="text-3xl font-bold mb-6">Available Rooms</h1>
 
 			{#if isLoading}
-				<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<div class="grid md:grid-cols-2 min-w-[100vh] lg:grid-cols-3 gap-6">
 					{#each Array(10) as _}
 						<Card class="animate-pulse">
 							<div class="h-32 bg-gray-200 rounded" />
@@ -273,7 +315,7 @@
 						<Card>
 							<div class="flex justify-between">
 								<h3 class="text-xl font-semibold">Room {room.roomNumber}</h3>
-								<p class="text-lg font-bold">${room.pricePerNight}/night</p>
+								<p class="text-lg font-bold">BDT {room.pricePerNight}/night</p>
 							</div>
 							<p class="text-gray-600 mt-2">{room.type} - {room.viewType} View</p>
 							<p class="mt-2">{room.description}</p>
@@ -337,7 +379,7 @@
 							</button>
 							<h3 class="font-semibold">Room {booking.room.roomNumber}</h3>
 							<p class="text-sm text-gray-600">
-								{booking.room.type} - ${booking.room.pricePerNight}/night
+								{booking.room.type} - BDT{booking.room.pricePerNight}/night
 							</p>
 							<div class="flex">
 								<div class="mt-2">
@@ -346,6 +388,9 @@
 									<input
 										type="number"
 										min="1"
+										on:change={(e) =>
+											// @ts-ignore
+											updatedSelectedRooms({ ...booking, adults: e?.target?.value })}
 										max="4"
 										bind:value={booking.adults}
 										class="mt-1 block w-20 rounded-md border-gray-300 shadow-sm"
@@ -358,6 +403,9 @@
 										type="number"
 										min="0"
 										max="2"
+										on:change={(e) =>
+											// @ts-ignore
+											updatedSelectedRooms({ ...booking, children: e?.target?.value })}
 										bind:value={booking.children}
 										class="mt-1 block w-20 rounded-md border-gray-300 shadow-sm"
 									/>

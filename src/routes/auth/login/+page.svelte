@@ -79,6 +79,7 @@
 							console.log(result);
 							goto('/admin/');
 						} else {
+							goto(result.data.returnUrl ?? '/');
 							// await applyAction(result);
 						}
 					};
