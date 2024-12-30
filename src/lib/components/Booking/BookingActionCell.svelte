@@ -78,20 +78,12 @@
 <div class="flex gap-2">
 	<div>
 		{#if booking.transaction && booking.transaction[0]}
-			<a
-				href={booking.transaction[0].stripeReceiptUrl}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="text-blue-600 hover:underline"
-			>
-				Receipt
-			</a>
+			<Button on:click={() => downloadHTMLReceipt(booking)}>Download Receipt</Button>
 		{/if}
 
 		{#if !booking.isPaid}
 			<Button on:click={() => (showPaymentDialog = true)}>Pay Now</Button>
 		{/if}
-		<Button on:click={() => downloadHTMLReceipt(booking)}>Download Receipt</Button>
 	</div>
 
 	<!-- Delete Button
