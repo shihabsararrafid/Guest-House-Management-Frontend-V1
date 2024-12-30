@@ -19,9 +19,9 @@
 		{ icon: Home, label: 'Dashboard', href: '/admin' },
 		{ icon: Hotel, label: 'Rooms', href: '/admin/rooms' },
 		{ icon: Calendar, label: 'Bookings', href: '/admin/bookings' },
-		{ icon: Users, label: 'Users', href: '/admin/users' },
-		{ icon: CreditCard, label: 'Payments', href: '/admin/payments' },
-		{ icon: Settings, label: 'Settings', href: '/admin/settings' }
+		{ icon: Users, label: 'Users', href: '/admin/users' }
+		// { icon: CreditCard, label: 'Payments', href: '/admin/payments' },
+		// { icon: Settings, label: 'Settings', href: '/admin/settings' }
 	];
 
 	const handleLogout = () => {
@@ -88,6 +88,7 @@
 	<!-- Overlay -->
 	{#if showMobileMenu}
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
 			class="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
 			on:click={() => (showMobileMenu = false)}
