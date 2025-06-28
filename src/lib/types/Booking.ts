@@ -59,6 +59,7 @@ export interface Booking {
 	createdAt: string;
 	updatedAt: string;
 	rooms: BookingRoom[];
+	roomId: string;
 	transaction: Transaction[];
 }
 

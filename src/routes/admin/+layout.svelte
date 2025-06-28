@@ -9,7 +9,8 @@
 		Settings,
 		LogOut,
 		Menu,
-		X
+		X,
+		AlertTriangleIcon
 	} from 'lucide-svelte';
 	import { fly } from 'svelte/transition';
 
@@ -19,7 +20,8 @@
 		{ icon: Home, label: 'Dashboard', href: '/admin' },
 		{ icon: Hotel, label: 'Rooms', href: '/admin/rooms' },
 		{ icon: Calendar, label: 'Bookings', href: '/admin/bookings' },
-		{ icon: Users, label: 'Users', href: '/admin/users' }
+		{ icon: Users, label: 'Users', href: '/admin/users' },
+		{ icon: AlertTriangleIcon, label: 'Issues', href: '/admin/issues' }
 		// { icon: CreditCard, label: 'Payments', href: '/admin/payments' },
 		// { icon: Settings, label: 'Settings', href: '/admin/settings' }
 	];
