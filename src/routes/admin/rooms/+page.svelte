@@ -5,12 +5,25 @@
 	import type { NewRoom, Room } from '$lib/types/Rooms';
 	import { toast } from '@zerodevx/svelte-toast';
 	import { Input, Label } from 'flowbite-svelte';
-	import { Edit, Edit2, Plus, Search, Trash2, Tv, Wifi, Wind } from 'lucide-svelte';
+	import {
+		Edit,
+		Edit2,
+		Plus,
+		Search,
+		Trash2,
+		Tv,
+		Wifi,
+		Wind,
+		Calendar,
+		CheckCircle
+	} from 'lucide-svelte';
 	export let data;
 	let searchQuery = '';
 	let showAddModal = false;
 	let loading = false;
 	let editingRoom: Room | null = null;
+	let updatingRoomStatus: { [key: string]: boolean } = {}; // Track which rooms are being updated
+
 	// Enums from schema
 	// Define the enums directly in the component if you haven't set up the types file
 	enum RoomType {
@@ -216,12 +229,109 @@
 		}
 	}
 
+	// Quick reserve room function
+	async function handleQuickReserve(roomId: string): Promise<void> {
+		if (confirm('Are you sure you want to reserve this room?')) {
+			try {
+				// Set loading state for this specific room
+				updatingRoomStatus = { ...updatingRoomStatus, [roomId]: true };
+
+				const response = await fetch(`${PUBLIC_API_URL}/room/${roomId}`, {
+					headers: {
+						'Content-Type': 'application/json',
+						Accept: 'application/json',
+						'Access-Control-Allow-Credentials': 'true'
+					},
+					body: JSON.stringify({ status: RoomStatus.RESERVED }),
+					credentials: 'include',
+					method: 'PATCH'
+				});
+
+				if (response.ok) {
+					toast.push('Room Reserved Successfully!', {
+						theme: {
+							'--toastBackground': '#48BB78',
+							'--toastColor': 'white'
+						}
+					});
+					// Refresh the rooms data
+					invalidate(`${PUBLIC_API_URL}/room/get-all-rooms`);
+				} else {
+					const errorData = await response.json();
+					throw new Error(errorData.message || 'Failed to reserve room');
+				}
+			} catch (error) {
+				toast.push('Failed to Reserve Room!', {
+					theme: {
+						'--toastBackground': 'red',
+						'--toastColor': 'white'
+					}
+				});
+				console.error('Error reserving room:', error);
+			} finally {
+				// Remove loading state for this room
+				updatingRoomStatus = { ...updatingRoomStatus, [roomId]: false };
+			}
+		}
+	}
+
+	// Quick make available function
+	async function handleQuickMakeAvailable(roomId: string): Promise<void> {
+		if (confirm('Are you sure you want to make this room available?')) {
+			try {
+				// Set loading state for this specific room
+				updatingRoomStatus = { ...updatingRoomStatus, [roomId]: true };
+
+				const response = await fetch(`${PUBLIC_API_URL}/room/${roomId}`, {
+					headers: {
+						'Content-Type': 'application/json',
+						Accept: 'application/json',
+						'Access-Control-Allow-Credentials': 'true'
+					},
+					body: JSON.stringify({ status: RoomStatus.AVAILABLE }),
+					credentials: 'include',
+					method: 'PATCH'
+				});
+
+				if (response.ok) {
+					toast.push('Room Made Available Successfully!', {
+						theme: {
+							'--toastBackground': '#48BB78',
+							'--toastColor': 'white'
+						}
+					});
+					// Refresh the rooms data
+					invalidate(`${PUBLIC_API_URL}/room/get-all-rooms`);
+				} else {
+					const errorData = await response.json();
+					throw new Error(errorData.message || 'Failed to make room available');
+				}
+			} catch (error) {
+				toast.push('Failed to Make Room Available!', {
+					theme: {
+						'--toastBackground': 'red',
+						'--toastColor': 'white'
+					}
+				});
+				console.error('Error making room available:', error);
+			} finally {
+				// Remove loading state for this room
+				updatingRoomStatus = { ...updatingRoomStatus, [roomId]: false };
+			}
+		}
+	}
+
 	function addBed(): void {
 		newRoom.beds = [...newRoom.beds, { bedType: BedType.SINGLE, quantity: 1, capacity: 1 }];
 	}
 
 	function removeBed(index: number): void {
 		newRoom.beds = newRoom.beds.filter((_, i) => i !== index);
+	}
+
+	// Function to check if room can be reserved
+	function canReserveRoom(status: RoomStatus): boolean {
+		return status === RoomStatus.AVAILABLE || status === RoomStatus.CLEANING;
 	}
 </script>
 
@@ -325,7 +435,11 @@
 											? 'bg-red-100 text-red-800'
 											: room.status === 'MAINTENANCE'
 												? 'bg-yellow-100 text-yellow-800'
-												: 'bg-gray-100 text-gray-800'}"
+												: room.status === 'RESERVED'
+													? 'bg-blue-100 text-blue-800'
+													: room.status === 'CLEANING'
+														? 'bg-purple-100 text-purple-800'
+														: 'bg-gray-100 text-gray-800'}"
 								>
 									{room.status}
 								</span>
@@ -341,15 +455,56 @@
 							<td class="px-6 py-4"> BDT {room.pricePerNight}</td>
 							<td class="px-6 py-4">
 								<div class="flex gap-2">
+									<!-- Quick Reserve Button (for AVAILABLE/CLEANING rooms) -->
+									{#if canReserveRoom(room.status)}
+										<button
+											class="text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+											on:click={() => handleQuickReserve(room.id)}
+											disabled={updatingRoomStatus[room.id]}
+											title="Quick Reserve"
+										>
+											{#if updatingRoomStatus[room.id]}
+												<div
+													class="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"
+												></div>
+											{:else}
+												<Calendar class="w-5 h-5" />
+											{/if}
+										</button>
+									{/if}
+
+									<!-- Quick Make Available Button (for RESERVED rooms) -->
+									{#if room.status === RoomStatus.RESERVED}
+										<button
+											class="text-green-600 hover:text-green-800 disabled:opacity-50 disabled:cursor-not-allowed"
+											on:click={() => handleQuickMakeAvailable(room.id)}
+											disabled={updatingRoomStatus[room.id]}
+											title="Make Available"
+										>
+											{#if updatingRoomStatus[room.id]}
+												<div
+													class="w-5 h-5 border-2 border-green-600 border-t-transparent rounded-full animate-spin"
+												></div>
+											{:else}
+												<CheckCircle class="w-5 h-5" />
+											{/if}
+										</button>
+									{/if}
+
+									<!-- Edit Button -->
 									<button
 										class="text-blue-600 hover:text-blue-800"
 										on:click={() => handleEdit(room)}
+										title="Edit Room"
 									>
 										<Edit class="w-5 h-5" />
 									</button>
+
+									<!-- Delete Button -->
 									<button
 										class="text-red-600 hover:text-red-800"
 										on:click={() => handleDeleteRoom(room.id)}
+										title="Delete Room"
 									>
 										<Trash2 class="w-5 h-5" />
 									</button>
